@@ -46,11 +46,11 @@ namespace Vella.Common.Navigation
         public List<Vector3> Path { get; set; } = new List<Vector3>();
 
         public void Clear()
-        {      
+        {
             NodePath?.Clear();
-            Path?.Clear();            
+            Path?.Clear();
         }
-       
+
         public BurstAStarPathFinder GetPath(Vector3 from, Vector3 to)
         {
             var startNode = Grid.FindClosestNode(from, AllowFlags, 20);
@@ -64,7 +64,7 @@ namespace Vella.Common.Navigation
 
             var jobResult = PathFindingJob.Complete(this,
                 ref Grid.InnerGrid, Areas, Id,
-                from.GridPoint, to.GridPoint, 
+                from.GridPoint, to.GridPoint,
                 AllowFlags, Grid.Transform.ToWorldMatrix);
 
             Status = jobResult.PathStatus;
@@ -78,7 +78,7 @@ namespace Vella.Common.Navigation
         {
             public struct PathFindingJobResult
             {
-                public PathStatus PathStatus;               
+                public PathStatus PathStatus;
             }
 
             public NativePriorityQueue OpenQueue;
@@ -115,7 +115,7 @@ namespace Vella.Common.Navigation
                         Grid = grid,
                         Areas = nativeAreas,
                         Path = nativePath,
-                        MaxPoints = 500,
+                        MaxPoints = 5000,
                         WorldPath = nativeVectorPath,
                         TransformMatrix = localToWorld,
                         ResultPtr = &result
@@ -203,11 +203,11 @@ namespace Vella.Common.Navigation
                                     continue;
 
                                 //if (Math.Abs(neighbor.Y-current.Y) > 0.8f)
-                                //    continue;                                
+                                //    continue;
 
-                                var nX = neighbor.NavigableCenter.x;
-                                var nY = neighbor.NavigableCenter.y;
-                                var nZ = neighbor.NavigableCenter.z;
+                                // var nX = neighbor.NavigableCenter.x;
+                                // var nY = neighbor.NavigableCenter.y;
+                                // var nZ = neighbor.NavigableCenter.z;
 
                                 var distance = math.distance(current.NavigableCenter, neighbor.NavigableCenter); //GetDistance(cX, cY, cZ, nX, nY, nZ);
 
