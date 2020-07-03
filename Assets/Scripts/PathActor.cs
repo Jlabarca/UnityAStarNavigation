@@ -42,7 +42,7 @@ public class PathActor : MonoBehaviour
     {
         nextPositions = new Queue<Vector3>();
         _gridManager = GameObject.Find("GridManager").GetComponent<GridManager>();
-        _lineRenderer = gameObject.AddComponent<LineRenderer>();
+        //_lineRenderer = gameObject.AddComponent<LineRenderer>();
         _mat = new Material(Shader.Find("Diffuse"));
         Areas = new AreaDefinitions<NodeFlags>
         {
@@ -90,7 +90,9 @@ public class PathActor : MonoBehaviour
                 _pathElapsedTime = 0;
                 nextStep = null;
                 destination = GetRandomVector3Xz(areaSize);
-                UpdatePath();
+                // si position similar a destination setear null
+                if(destination != null)
+                    UpdatePath();
             }
             _stepElapsedTime = 0;
         }
@@ -106,7 +108,11 @@ public class PathActor : MonoBehaviour
         if(Vector3.Distance(transform.position, nextStep.Value) < .1f) nextStep = null;
 
     }
-
+    public void SetDestination(Vector3 newDestination)
+    {
+        destination = newDestination;
+        UpdatePath();
+    }
     public void GetPath()
     {
         if (_gridManager == null)
