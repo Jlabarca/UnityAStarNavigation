@@ -41,10 +41,6 @@ public class PathTester : MonoBehaviour
 
     public float AverageQueryTime => QueryTimeHistory.Any() ? QueryTimeHistory.Average() : 0;
 
-    void Awake()
-    {
-        GridManager = GameObject.Find("GridManager").GetComponent<GridManager>();
-    }
 
     private void Updated()
     {
@@ -64,7 +60,7 @@ public class PathTester : MonoBehaviour
         Areas = new AreaDefinitions<NodeFlags>
         {
             {NodeFlags.Combat, 0.4f},
-            {NodeFlags.Avoidance, -2f},
+            {NodeFlags.Avoidance, -50f},
             {NodeFlags.NearEdge, -0.5f}
         };
 
@@ -127,62 +123,60 @@ public class PathTester : MonoBehaviour
             _endRenderer.sharedMaterial.color = LineColor;
         }
 
-        if (GridManager != null && GridManager.Grid != null)
+        if (GridManager == null || GridManager.Grid == null) return;
+        if (PathFinder == null)
         {
-            if (PathFinder == null)
+            PathFinder = new BurstAStarPathFinder(GridManager.Grid)
             {
-                PathFinder = new BurstAStarPathFinder(GridManager.Grid)
+                Areas = Areas,
+                Grid = GridManager.Grid,
+            };
+        }
+
+        _closestNode = GridManager.Grid.FindClosestNode(StartTransform.position, AllowedFlags, 20);
+        if (_closestNode.Equals(default))
+        {
+            Debug.Log("Closest Node Not Found");
+            return;
+        }
+
+        _exitNode = GridManager.Grid.FindClosestNode(EndTransform.position, AllowedFlags, 20);
+        if (_exitNode.Equals(default))
+        {
+            return;
+        }
+
+        if (_closestNode.Equals(default) || _exitNode.Equals(default))
+        {
+            Debug.Log("Nodes not found");
+        }
+        else
+        {
+            GetPath();
+
+            if (LineRenderer != null)
+            {
+                _cleanedPath = MergeLikeDirectionPathSegments(PathFinder.NodePath);
+                var path = OffsetPath(_cleanedPath, transform.position, PathOffset).ToList();
+                path.Insert(0, StartTransform.position);
+                path.Add(EndTransform.position);
+                LineRenderer.positionCount = path.Count;
+                LineRenderer.SetPositions(path.ToArray());
+
+                if (LineRenderer.sharedMaterial == null)
                 {
-                    Areas = Areas,
-                    Grid = GridManager.Grid,
-                };
-            }
-
-            _closestNode = GridManager.Grid.FindClosestNode(StartTransform.position, AllowedFlags, 20);
-            if (_closestNode.Equals(default))
-            {
-                Debug.Log("Closest Node Not Found");
-                return;
-            }
-
-            _exitNode = GridManager.Grid.FindClosestNode(EndTransform.position, AllowedFlags, 20);
-            if (_exitNode.Equals(default))
-            {
-                return;
-            }
-
-            if (_closestNode.Equals(default) || _exitNode.Equals(default))
-            {
-                Debug.Log("Nodes not found");
-            }
-            else
-            {
-                GetPath();
-
-                if (LineRenderer != null)
+                    LineRenderer.sharedMaterial = _mat;
+                }
+                else
                 {
-                    _cleanedPath = MergeLikeDirectionPathSegments(PathFinder.NodePath);
-                    var path = OffsetPath(_cleanedPath, transform.position, PathOffset).ToList();
-                    path.Insert(0, StartTransform.position);
-                    path.Add(EndTransform.position);
-                    LineRenderer.positionCount = path.Count;
-                    LineRenderer.SetPositions(path.ToArray());
-
-                    if (LineRenderer.sharedMaterial == null)
-                    {
-                        LineRenderer.sharedMaterial = _mat;
-                    }
-                    else
-                    {
-                        LineRenderer.sharedMaterial.color = LineColor;
-                    }
+                    LineRenderer.sharedMaterial.color = LineColor;
                 }
             }
+        }
 
 #if UNITY_EDITOR
-            SceneView.RepaintAll();
+        SceneView.RepaintAll();
 #endif
-        }
     }
 
     public IEnumerable<Vector3> OffsetPath(IEnumerable<GridNode> nodes, Vector3 origin, float amount)
@@ -196,7 +190,7 @@ public class PathTester : MonoBehaviour
     public IEnumerable<GridNode> MergeLikeDirectionPathSegments(IEnumerable<GridNode> nodes)
     {
         GridNode last = default;
-        Vector3 lastDir = Vector3.zero;
+        var lastDir = Vector3.zero;
         foreach (var node in nodes)
         {
             if (last == null)
@@ -227,8 +221,6 @@ public class PathTester : MonoBehaviour
         PathFinder.Clear();
         PathFinder.AllowFlags = (ulong)AllowedFlags;
         PathFinder.GetPath(_closestNode, _exitNode);
-
-
     }
 
     public void ClearPath()
