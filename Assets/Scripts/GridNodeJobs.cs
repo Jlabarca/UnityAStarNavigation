@@ -47,7 +47,7 @@ public static class GridNodeJobs
         public struct SetFlagsInNodeRange : IJob
         {
             //public NativeResultList<GridNode> Results;
-            public NativeArray3D<GridNode> Grid;        
+            public NativeArray3D<GridNode> Grid;
             public int3 LocalGridMax;
             public int3 LocalGridMin;
             public ulong Flags;
@@ -72,7 +72,7 @@ public static class GridNodeJobs
                 {
                     Flags = flags,
                     Grid = grid,
-                    LocalGridMin = min,                 
+                    LocalGridMin = min,
                     LocalGridMax = max,
 
                 }.Schedule();
@@ -110,7 +110,7 @@ public static class GridNodeJobs
                             if (Box.Contains(worldNavigableCenter))
                             {
                                 node.Flags |= Flags;
-                            }                            
+                            }
                         }
                     }
                 }
@@ -194,7 +194,7 @@ public static class GridNodeJobs
 
                 public void Execute()
                 {
-                    // The tracked nodes should be ones we previously assigned these exact flags to; now undo that work.        
+                    // The tracked nodes should be ones we previously assigned these exact flags to; now undo that work.
                     for (int i = 0; i < PreviouslyTrackedIndices.Length; i++)
                     {
                         var idx = PreviouslyTrackedIndices[i];
@@ -215,7 +215,7 @@ public static class GridNodeJobs
                         {
                             for (var z = gridPointMin.z; z <= gridPointMax.z; z++)
                             {
-                                // Each node starts in GridLocal space, is moved to WorldSpace, then be compared with the BoxCollider.    
+                                // Each node starts in GridLocal space, is moved to WorldSpace, then be compared with the BoxCollider.
                                 var idx = SourceGrid.GetIndex(x, y, z);
                                 ref var node = ref SourceGrid.Internal.AsRef(idx);
                                 var worldNavigableCenter = math.transform(ToGridWorldMatrix, node.NavigableCenter);
@@ -269,13 +269,13 @@ public static class GridNodeJobs
                 public ulong Flags;
 
                 public void Execute()
-                {             
-                    // The tracked nodes should be ones we previously assigned these exact flags to; now undo that work.        
+                {
+                    // The tracked nodes should be ones we previously assigned these exact flags to; now undo that work.
                     for (int i = 0; i < PreviouslyTrackedIndices.Length; i++)
                     {
                         var idx = PreviouslyTrackedIndices[i];
                         ref var node = ref SourceGrid.Internal.AsRef(idx);
-                        node.Flags &= ~Flags; 
+                        node.Flags &= ~Flags;
                     }
 
                     // Translate the World space AABB into grid coordinates.
@@ -292,9 +292,9 @@ public static class GridNodeJobs
                         {
                             for (var z = gridPointMin.z; z <= gridPointMax.z; z++)
                             {
-                                // Each node starts in GridLocal space, is moved to WorldSpace, then be compared with the BoxCollider.    
+                                // Each node starts in GridLocal space, is moved to WorldSpace, then be compared with the BoxCollider.
                                 var idx = SourceGrid.GetIndex(x, y, z);
-                                ref var node = ref SourceGrid.Internal.AsRef(idx);               
+                                ref var node = ref SourceGrid.Internal.AsRef(idx);
                                 var worldNavigableCenter = math.transform(ToGridWorldMatrix, node.NavigableCenter);
 
                                 // The BoxCollider internally converts the point into its own local space to make the collision test.
@@ -354,7 +354,7 @@ public static class GridNodeJobs
                 public NavMeshExtensions.Edge Edge;
                 public float Distance;
                 public Vector3 Position;
-                public NavMeshExtensions.Triangle Polygon;          
+                public NavMeshExtensions.Triangle Polygon;
             }
 
             public EdgeHit FindClosestEdge(NativeArray<NavMeshExtensions.Edge> edges, Vector3 position)
@@ -410,12 +410,12 @@ public static class GridNodeJobs
 
                     var hit = Query.MapLocation(nodeWorldPos, node.Bounds.Extents, 0);
                     if (Query.IsValid(hit) && hit.position != Vector3.zero)
-                    {         
+                    {
                         if (Math.Abs(hit.position.x - nodeWorldPos.x) < node.Bounds.Extents.x * 0.15 && Math.Abs(hit.position.z - nodeWorldPos.z) < node.Bounds.Extents.x * 0.15)
                         {
                             node.Flags |= WalkableFlags;
                             node.NavigableCenter = math.transform(ToLocalMatrix, hit.position);
-             
+
                             var edgeHit = FindClosestEdge(NavMeshEdges, hit.position);
 
                             var gridAdjustedEdgeDistance = edgeHit.Distance < node.Bounds.Extents.x * 0.95
@@ -428,11 +428,12 @@ public static class GridNodeJobs
                             }
                         }
                     }
-                }     
+                }
             }
 
-            public static void Execute(NavigationGrid grid, float proximity, float edgeWidth, bool alignVertical, NodeFlags walkableFlags, NodeFlags nearEdgeFlags, NodeFlags defaultFlags)
-            {             
+            public static void Execute(NavigationGrid grid, float proximity, float edgeWidth, bool alignVertical,
+                NodeFlags walkableFlags, NodeFlags nearEdgeFlags, NodeFlags defaultFlags)
+            {
                 using (var query = new NavMeshQuery(NavMeshWorld.GetDefaultWorld(), Allocator.TempJob, 100))
                 {
                     ref var edges = ref NavMeshExtensions.GetNativeEdges();
